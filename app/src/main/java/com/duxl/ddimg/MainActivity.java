@@ -37,7 +37,6 @@ import com.yancy.gallerypick.config.GalleryConfig;
 import com.yancy.gallerypick.config.GalleryPick;
 import com.yancy.gallerypick.inter.IHandlerCallBack;
 
-import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
@@ -67,7 +66,7 @@ public class MainActivity extends Activity implements View.OnClickListener, View
     private final int mRequestCodeForPermissionWriteData = 0;
     private int mYear, mMonth, mDay, mHour, mMinute;
 
-    private boolean mGuideShowed; // 已显示过向导
+    private int mGuideStep = -1; // 向导步骤
 
     private String[] mHints = {"记住了吗", "下次不用教了哟", "现在【截屏】保存图片吧"};
 
@@ -109,8 +108,10 @@ public class MainActivity extends Activity implements View.OnClickListener, View
         mTvName.setText(saveName);
         mTvLocation.setText(saveLocation);
 
-        mGuideShowed = mSharedPreferencesUtil.getCacheBoolean(KEY_GUIDE, false);
-        if(!mGuideShowed) {
+        if(!mSharedPreferencesUtil.getCacheBoolean(KEY_GUIDE, false)) {
+            mGuideStep = 1;
+        }
+        if(mGuideStep == 1) {
             mIvGuide.setVisibility(View.VISIBLE);
             mLLDate.setVisibility(View.GONE);
             mLLUser.setVisibility(View.GONE);
@@ -184,11 +185,11 @@ public class MainActivity extends Activity implements View.OnClickListener, View
                 public void onDismiss(DialogInterface dialog) {
                     mSharedPreferencesUtil.cacheBoolean(KEY_GUIDE,true);
                     mIvGuide.setVisibility(View.GONE);
-                    if(!mGuideShowed) {
+                    if(mGuideStep == 3) {
                         Message delayMsg = new Message();
                         mHandler.sendMessageDelayed(delayMsg, 1000);
                     }
-                    mGuideShowed = true;
+                    mGuideStep = -1;
                 }
             });
             alertDialog.show();
@@ -213,11 +214,11 @@ public class MainActivity extends Activity implements View.OnClickListener, View
                 public void onDismiss(DialogInterface dialog) {
                     mSharedPreferencesUtil.cacheBoolean(KEY_GUIDE,true);
                     mIvGuide.setVisibility(View.GONE);
-                    if(!mGuideShowed) {
+                    if(mGuideStep == 3) {
                         Message delayMsg = new Message();
                         mHandler.sendMessageDelayed(delayMsg, 1000);
                     }
-                    mGuideShowed = true;
+                    mGuideStep = -1;
                 }
             });
             alertDialog.show();
@@ -251,8 +252,11 @@ public class MainActivity extends Activity implements View.OnClickListener, View
         timePickerDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
             @Override
             public void onDismiss(DialogInterface dialog) {
-                mIvGuide.setImageResource(R.mipmap.guide_03);
-                mLLUser.setVisibility(View.VISIBLE);
+                if(mGuideStep == 2) {
+                    mGuideStep = 3;
+                    mIvGuide.setImageResource(R.mipmap.guide_03);
+                    mLLUser.setVisibility(View.VISIBLE);
+                }
             }
         });
     }
@@ -282,8 +286,11 @@ public class MainActivity extends Activity implements View.OnClickListener, View
         datePickerDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "取消", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                mIvGuide.setImageResource(R.mipmap.guide_03);
-                mLLUser.setVisibility(View.VISIBLE);
+                if(mGuideStep == 2) {
+                    mGuideStep = 3;
+                    mIvGuide.setImageResource(R.mipmap.guide_03);
+                    mLLUser.setVisibility(View.VISIBLE);
+                }
             }
         });
 
@@ -396,8 +403,11 @@ public class MainActivity extends Activity implements View.OnClickListener, View
         @Override
         public void onFinish() {
             Log.i(TAG, "onFinish: 结束");
-            mLLDate.setVisibility(View.VISIBLE);
-            mIvGuide.setImageResource(R.mipmap.guide_02);
+            if(mGuideStep == 1) {
+                mGuideStep = 2;
+                mLLDate.setVisibility(View.VISIBLE);
+                mIvGuide.setImageResource(R.mipmap.guide_02);
+            }
         }
 
         @Override
